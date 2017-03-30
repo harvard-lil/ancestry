@@ -96,7 +96,7 @@ module Ancestry
     # Ancestors
 
     def ancestry_changed?
-      changed.include?(self.ancestry_base_class.ancestry_column.to_s)
+      changes.keys.include?(self.ancestry_base_class.ancestry_column.to_s)
     end
 
     def parse_ancestry_column obj
@@ -120,7 +120,7 @@ module Ancestry
     end
 
     def ancestor_ids_was
-      parse_ancestry_column(changed_attributes[self.ancestry_base_class.ancestry_column.to_s])
+      parse_ancestry_column(saved_changes.transform_values(&:first)[self.ancestry_base_class.ancestry_column.to_s])
     end
 
     def path_ids

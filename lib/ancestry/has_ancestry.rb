@@ -42,14 +42,14 @@ class << ActiveRecord::Base
     # Named scopes
     scope :roots, lambda { where(ancestry_column => nil) }
     scope :ancestors_of, lambda { |object| where(ancestor_conditions(object)) }
-    scope :path_of, lambda { |object| where(path_conditions(object)) }
+    # scope :path_of, lambda { |object| where(path_conditions(object)) }
     scope :children_of, lambda { |object| where(child_conditions(object)) }
     scope :descendants_of, lambda { |object| where(descendant_conditions(object)) }
     scope :subtree_of, lambda { |object| where(subtree_conditions(object)) }
     scope :siblings_of, lambda { |object| where(sibling_conditions(object)) }
     scope :ordered_by_ancestry, lambda {
       if %w(mysql mysql2 sqlite postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::MAJOR >= 5
-        reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, '')")
+        reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} ELSE '' END)")
       else
         reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}")
       end
@@ -93,7 +93,7 @@ class << ActiveRecord::Base
 
     after_touch :touch_ancestors_callback
     after_destroy :touch_ancestors_callback
-    after_save :touch_ancestors_callback, if: :changed?
+    after_save :touch_ancestors_callback, if: :saved_changes?
   end
 end
 
